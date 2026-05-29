@@ -34,9 +34,8 @@ dependencies:
   google_mlkit_text_recognition: ^0.13.1
   image_picker: ^1.1.2
 
-  # F6 HEALTH CONNECT - architettura pronta; package health da aggiungere
-  # quando health package risolve il conflitto compileSdk 34 vs connect-client 1.1.x
-  # health: ^12.2.0
+  # F6 HEALTH CONNECT - patch locale: compileSdk 34→36 per connect-client 1.1.0-alpha11
+  health: ^12.2.0
 
   # Utility
   intl: ^0.20.2
@@ -49,6 +48,12 @@ dev_dependencies:
   # Generazione codice per drift
   drift_dev: ^2.16.0
   build_runner: ^2.4.9
+
+dependency_overrides:
+  # Patch locale di health 12.2.1: compileSdk 34 → 36 per compatibilità
+  # con androidx.health.connect:connect-client:1.1.0-alpha11 (minCompileSdk=35).
+  health:
+    path: packages/health
 
 flutter:
   uses-material-design: true

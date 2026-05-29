@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.robyone.dicadoc"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -17,7 +17,7 @@ android {
 
     defaultConfig {
         applicationId = "com.robyone.dicadoc"
-        minSdk = flutter.minSdkVersion
+        minSdk = 26 // health package richiede minSdk 26 (Android 8.0)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
