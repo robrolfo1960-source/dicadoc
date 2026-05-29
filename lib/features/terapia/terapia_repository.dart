@@ -152,6 +152,88 @@ class TerapiaRepository {
     await _sync.push();
   }
 
+  Future<void> creaTerapia({
+    required int pazienteId,
+    required String nomeFarmaco,
+    String? dosaggio,
+    required PrioritaTerapia priorita,
+    required List<String> orari,
+    required DateTime dataInizio,
+    DateTime? dataFine,
+    String? note,
+  }) async {
+    final terapiaId = await _db.into(_db.terapie).insert(
+          TerapieCompanion.insert(
+            pazienteId: pazienteId,
+            nomeFarmaco: nomeFarmaco,
+            dosaggio: Value(dosaggio),
+            priorita: priorita,
+            attiva: const Value(true),
+            dataInizio: dataInizio,
+            dataFine: Value(dataFine),
+            note: Value(note),
+          ),
+        );
+    for (final ora in orari) {
+      await _db.into(_db.orariTerapia).insert(
+            OrariTerapiaCompanion.insert(terapiaId: terapiaId, ora: ora),
+          );
+    }
+    await pianificaPromemoria(pazienteId);
+    await _sync.push();
+  }
+
+  Future<void> aggiornaTerapia({
+    required Terapia terapia,
+    required String nomeFarmaco,
+    String? dosaggio,
+    required PrioritaTerapia priorita,
+    required List<String> orari,
+    required DateTime dataInizio,
+    DateTime? dataFine,
+    String? note,
+  }) async {
+    await (_db.update(_db.terapie)..where((t) => t.id.equals(terapia.id)))
+        .write(TerapieCompanion(
+      nomeFarmaco: Value(nomeFarmaco),
+      dosaggio: Value(dosaggio),
+      priorita: Value(priorita),
+      dataInizio: Value(dataInizio),
+      dataFine: Value(dataFine),
+      note: Value(note),
+    ));
+    final vecchi = await (_db.select(_db.orariTerapia)
+          ..where((o) => o.terapiaId.equals(terapia.id)))
+        .get();
+    for (final o in vecchi) { await _notif.cancellaDose(o.id); }
+    await (_db.delete(_db.orariTerapia)
+          ..where((o) => o.terapiaId.equals(terapia.id)))
+        .go();
+    for (final ora in orari) {
+      await _db.into(_db.orariTerapia).insert(
+            OrariTerapiaCompanion.insert(terapiaId: terapia.id, ora: ora),
+          );
+    }
+    await pianificaPromemoria(terapia.pazienteId);
+    await _sync.push();
+  }
+
+  Future<void> disattivaTerapia(Terapia terapia) async {
+    await (_db.update(_db.terapie)..where((t) => t.id.equals(terapia.id)))
+        .write(const TerapieCompanion(attiva: Value(false)));
+    final orari = await (_db.select(_db.orariTerapia)
+          ..where((o) => o.terapiaId.equals(terapia.id)))
+        .get();
+    for (final o in orari) { await _notif.cancellaDose(o.id); }
+    await _sync.push();
+  }
+
+  Future<List<OrarioTerapia>> orariDiTerapia(int terapiaId) =>
+      (_db.select(_db.orariTerapia)
+            ..where((o) => o.terapiaId.equals(terapiaId))
+            ..orderBy([(o) => OrderingTerm(expression: o.ora)]))
+          .get();
+
   /// Pianifica le notifiche giornaliere per tutte le terapie attive.
   Future<void> pianificaPromemoria(int pazienteId) async {
     final farmaci = await farmaciOggi(pazienteId);

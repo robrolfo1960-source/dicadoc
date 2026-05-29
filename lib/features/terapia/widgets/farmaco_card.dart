@@ -6,10 +6,18 @@ import '../../../core/theme.dart';
 import '../terapia_repository.dart';
 
 class FarmacoCard extends StatelessWidget {
-  const FarmacoCard({super.key, required this.farmaco, required this.onTapDose});
+  const FarmacoCard({
+    super.key,
+    required this.farmaco,
+    required this.onTapDose,
+    this.onModifica,
+    this.onDisattiva,
+  });
 
   final FarmacoOggi farmaco;
   final void Function(DoseOggi dose) onTapDose;
+  final VoidCallback? onModifica;
+  final VoidCallback? onDisattiva;
 
   Color _colore(StatoFarmaco s) => switch (s) {
         StatoFarmaco.ok => AppTheme.statoOk,
@@ -60,6 +68,34 @@ class FarmacoCard extends StatelessWidget {
                   Tooltip(
                     message: 'Promemoria con sollecito ripetuto',
                     child: Icon(Icons.priority_high, color: colore),
+                  ),
+                if (onModifica != null || onDisattiva != null)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (v) {
+                      if (v == 'modifica') onModifica?.call();
+                      if (v == 'disattiva') onDisattiva?.call();
+                    },
+                    itemBuilder: (_) => [
+                      if (onModifica != null)
+                        const PopupMenuItem(
+                          value: 'modifica',
+                          child: ListTile(
+                            leading: Icon(Icons.edit_outlined),
+                            title: Text('Modifica'),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      if (onDisattiva != null)
+                        const PopupMenuItem(
+                          value: 'disattiva',
+                          child: ListTile(
+                            leading: Icon(Icons.stop_circle_outlined),
+                            title: Text('Disattiva'),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                    ],
                   ),
               ],
             ),

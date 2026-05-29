@@ -7,6 +7,7 @@ import 'terapia_providers.dart';
 import 'terapia_repository.dart';
 import 'widgets/assunzione_sheet.dart';
 import 'widgets/farmaco_card.dart';
+import 'widgets/terapia_form_sheet.dart';
 
 /// Pannello P1: TERAPIA.
 class TerapiaPanelScreen extends ConsumerStatefulWidget {
@@ -26,6 +27,52 @@ class _TerapiaPanelScreenState extends ConsumerState<TerapiaPanelScreen> {
       final pazienteId = ref.read(pazienteCorrenteIdProvider);
       await ref.read(terapiaRepositoryProvider).pianificaPromemoria(pazienteId);
     });
+  }
+
+  Future<void> _nuovaTerapia() async {
+    final salvata = await TerapiaFormSheet.mostra(context);
+    if (salvata) ref.invalidate(farmaciOggiProvider);
+  }
+
+  Future<void> _modificaTerapia(FarmacoOggi farmaco) async {
+    final repo = ref.read(terapiaRepositoryProvider);
+    final orari = await repo.orariDiTerapia(farmaco.terapia.id);
+    if (!mounted) return;
+    final salvata = await TerapiaFormSheet.mostra(
+      context,
+      terapia: farmaco.terapia,
+      orariEsistenti: orari,
+    );
+    if (salvata) ref.invalidate(farmaciOggiProvider);
+  }
+
+  Future<void> _disattivaTerapia(FarmacoOggi farmaco) async {
+    final conferma = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Disattiva terapia'),
+        content: Text(
+            'Disattivare "${farmaco.terapia.nomeFarmaco}"? I promemoria verranno cancellati.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Annulla')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Disattiva')),
+        ],
+      ),
+    );
+    if (conferma != true) return;
+    await ref.read(terapiaRepositoryProvider).disattivaTerapia(farmaco.terapia);
+    ref.invalidate(farmaciOggiProvider);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                '"${farmaco.terapia.nomeFarmaco}" disattivata.')),
+      );
+    }
   }
 
   Future<void> _registra(DoseOggi dose, StatoAssunzione stato) async {
@@ -48,8 +95,11 @@ class _TerapiaPanelScreenState extends ConsumerState<TerapiaPanelScreen> {
     final oggi = DateFormat('EEEE d MMMM', 'it_IT').format(DateTime.now());
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('P1 - Terapia'),
+      appBar: AppBar(title: const Text('Terapia')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _nuovaTerapia,
+        tooltip: 'Nuova terapia',
+        child: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(farmaciOggiProvider),
@@ -88,6 +138,8 @@ class _TerapiaPanelScreenState extends ConsumerState<TerapiaPanelScreen> {
                       dose: dose,
                       onScelta: (stato) => _registra(dose, stato),
                     ),
+                    onModifica: () => _modificaTerapia(f),
+                    onDisattiva: () => _disattivaTerapia(f),
                   ),
                 ),
               ],
