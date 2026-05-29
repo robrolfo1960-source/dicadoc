@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'core/theme.dart';
 import 'features/monitora/monitora_panel_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/profilo/profilo_screen.dart';
 import 'features/referti/referti_panel_screen.dart';
-import 'features/settings/settings_screen.dart';
 import 'features/terapia/terapia_panel_screen.dart';
 
 class DicaDocApp extends StatelessWidget {
@@ -46,7 +46,7 @@ class _HomeScreenState extends State<_HomeScreen> {
           TerapiaPanelScreen(),
           MonitoraPanelScreen(),
           RefertiPanelScreen(),
-          SettingsScreen(),
+          ProfiloScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -69,9 +69,9 @@ class _HomeScreenState extends State<_HomeScreen> {
             label: 'Referti',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Impostazioni',
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profilo',
           ),
         ],
       ),
