@@ -12,6 +12,7 @@ GeneratedPluginRegistrant.java
 /gradle/native/
 /gradle/kotlin-profile/
 /gradle/gradle-daemon-jvm.properties
+/gradle/wrapper/dists/
 
 # Remember to never publicly share your keystore.
 # See https://flutter.dev/to/reference-keystore
