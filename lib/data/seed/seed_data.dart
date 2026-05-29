@@ -78,6 +78,41 @@ Future<void> seedIfEmpty(AppDatabase db) async {
       ]);
     });
 
+    // --- Parametri abilitati per il paziente + misurazione di esempio (P2) ---
+    final pressione = await (db.select(db.catalogoParametri)
+          ..where((p) => p.codice.equals('pressione')))
+        .getSingle();
+    final peso = await (db.select(db.catalogoParametri)
+          ..where((p) => p.codice.equals('peso')))
+        .getSingle();
+    final glicemia = await (db.select(db.catalogoParametri)
+          ..where((p) => p.codice.equals('glicemia')))
+        .getSingle();
+
+    await db.batch((b) {
+      b.insertAll(db.parametriAbilitati, [
+        ParametriAbilitatiCompanion.insert(
+            pazienteId: pazienteId, parametroId: pressione.id),
+        ParametriAbilitatiCompanion.insert(
+            pazienteId: pazienteId, parametroId: peso.id),
+        ParametriAbilitatiCompanion.insert(
+            pazienteId: pazienteId, parametroId: glicemia.id),
+      ]);
+    });
+
+    // Pressione di stamattina: 138/88 mmHg -> giallo (attenzione)
+    await db.into(db.misurazioni).insert(
+          MisurazioniCompanion.insert(
+            pazienteId: pazienteId,
+            parametroId: pressione.id,
+            data: oggi.add(const Duration(hours: 8, minutes: 10)),
+            fonteEffettiva: FonteParametro.manuale,
+            valore1: const Value(138.0),
+            valore2: const Value(88.0),
+            sincronizzato: const Value(false),
+          ),
+        );
+
     // --- Terapia 1: salvavita, due assunzioni al giorno ---
     final ramiprilId = await db.into(db.terapie).insert(
           TerapieCompanion.insert(
