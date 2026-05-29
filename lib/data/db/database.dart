@@ -169,9 +169,9 @@ class Assunzioni extends Table {
   Assunzioni,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  // Fase 3: il DB è cifrato con SQLCipher; la passphrase viene da CryptoService.
+  AppDatabase(String passphrase) : super(_openConnection(passphrase));
 
-  // Costruttore di comodo per i test (DB in memoria).
   AppDatabase.forTesting(super.e);
 
   @override
@@ -184,13 +184,15 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-LazyDatabase _openConnection() {
+LazyDatabase _openConnection(String passphrase) {
   return LazyDatabase(() async {
     final dir = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dir.path, 'dicadoc.sqlite'));
-    // In Fase 3, per la cifratura GDPR, sostituire NativeDatabase con
-    // l'apertura cifrata (SQLCipher) passando una passphrase recuperata da
-    // flutter_secure_storage. Lo schema NON cambia.
-    return NativeDatabase.createInBackground(file);
+    // Fase 3: nuovo file cifrato. Il vecchio 'dicadoc.sqlite' in chiaro
+    // (Fase 1/2) viene ignorato; il seed ricrea i dati demo al primo avvio.
+    final file = File(p.join(dir.path, 'dicadoc_v3.sqlite'));
+    return NativeDatabase.createInBackground(
+      file,
+      setup: (db) => db.execute("PRAGMA key = '$passphrase'"),
+    );
   });
 }

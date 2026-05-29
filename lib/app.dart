@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'core/theme.dart';
 import 'features/monitora/monitora_panel_screen.dart';
+import 'features/onboarding/onboarding_screen.dart';
+import 'features/settings/settings_screen.dart';
 import 'features/terapia/terapia_panel_screen.dart';
 
 class DicaDocApp extends StatelessWidget {
-  const DicaDocApp({super.key});
+  const DicaDocApp({super.key, required this.showOnboarding});
+
+  final bool showOnboarding;
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +17,11 @@ class DicaDocApp extends StatelessWidget {
       title: 'DicaDoc',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const _HomeScreen(),
+      initialRoute: showOnboarding ? '/onboarding' : '/home',
+      routes: {
+        '/onboarding': (_) => const OnboardingScreen(),
+        '/home': (_) => const _HomeScreen(),
+      },
     );
   }
 }
@@ -36,6 +44,7 @@ class _HomeScreenState extends State<_HomeScreen> {
         children: const [
           TerapiaPanelScreen(),
           MonitoraPanelScreen(),
+          SettingsScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -51,6 +60,11 @@ class _HomeScreenState extends State<_HomeScreen> {
             icon: Icon(Icons.monitor_heart_outlined),
             selectedIcon: Icon(Icons.monitor_heart),
             label: 'Monitora',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Impostazioni',
           ),
         ],
       ),

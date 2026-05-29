@@ -1,7 +1,7 @@
 name: dicadoc
-description: "DicaDoc / PMMC - Suite per aderenza terapeutica e monitoraggio remoto (Fase 1: F1 ALERT + P1 TERAPIA)."
+description: "DicaDoc / PMMC - Suite per aderenza terapeutica e monitoraggio remoto."
 publish_to: "none"
-version: 0.1.0+1
+version: 0.3.0+3
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -13,10 +13,9 @@ dependencies:
   # Stato (Riverpod)
   flutter_riverpod: ^3.3.1
 
-  # Database locale (SQLite type-safe). NB: per la cifratura GDPR si sostituirà
-  # sqlite3_flutter_libs con sqlcipher_flutter_libs in Fase 3 (vedi README).
+  # Database locale cifrato (SQLCipher — Fase 3 GDPR).
   drift: ^2.16.0
-  sqlite3_flutter_libs: ^0.6.0+eol
+  sqlcipher_flutter_libs: ^0.7.0
   path_provider: ^2.1.3
   path: ^1.9.0
 
@@ -24,6 +23,12 @@ dependencies:
   flutter_local_notifications: ^21.0.0
   timezone: ^0.11.0
   flutter_timezone: ^5.1.0
+
+  # F3 GDPR - passphrase cifrata nel keystore del device
+  flutter_secure_storage: ^9.2.4
+
+  # F4 ONBOARDING QR - scanner QR per collegamento paziente/MMG
+  mobile_scanner: ^6.0.4
 
   # Utility
   intl: ^0.20.2
