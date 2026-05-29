@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'core/theme.dart';
 import 'features/monitora/monitora_panel_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/referti/referti_panel_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/terapia/terapia_panel_screen.dart';
 
@@ -44,6 +45,7 @@ class _HomeScreenState extends State<_HomeScreen> {
         children: const [
           TerapiaPanelScreen(),
           MonitoraPanelScreen(),
+          RefertiPanelScreen(),
           SettingsScreen(),
         ],
       ),
@@ -60,6 +62,11 @@ class _HomeScreenState extends State<_HomeScreen> {
             icon: Icon(Icons.monitor_heart_outlined),
             selectedIcon: Icon(Icons.monitor_heart),
             label: 'Monitora',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long),
+            label: 'Referti',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

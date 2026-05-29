@@ -3,7 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>NSCameraUsageDescription</key>
-	<string>La fotocamera è usata per scansionare il QR del medico durante l'onboarding.</string>
+	<string>La fotocamera è usata per scansionare il QR del medico e fotografare i referti di laboratorio.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>La galleria è usata per selezionare foto di referti di laboratorio da importare.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

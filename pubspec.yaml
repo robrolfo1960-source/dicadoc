@@ -30,6 +30,10 @@ dependencies:
   # F4 ONBOARDING QR - scanner QR per collegamento paziente/MMG
   mobile_scanner: ^6.0.4
 
+  # F5 OCR referti - ML Kit text recognition on-device (script latino)
+  google_mlkit_text_recognition: ^0.13.1
+  image_picker: ^1.1.2
+
   # Utility
   intl: ^0.20.2
 

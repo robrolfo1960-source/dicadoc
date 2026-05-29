@@ -160,5 +160,40 @@ Future<void> seedIfEmpty(AppDatabase db) async {
     // prima interazione / scheduling, restando "future" -> display verde.
     // (orari di riferimento mantenuti per chiarezza)
     assert(ramiprilOra2 > 0 && vitDOra > 0);
+
+    // --- Template OCR per referti di laboratorio italiani (F5) ---
+    // Pressione arteriosa: "Pressione arteriosa: 138/88" o "PA 138/88"
+    await db.batch((b) {
+      b.insertAll(db.templateReferti, [
+        // Pressione: sistolica (gruppo 1)
+        TemplateRefertiCompanion.insert(
+          nomeLaboratorio: 'Generico',
+          parametroId: pressione.id,
+          patternRicerca: r'(?:pressione|PA)\s*(?:arteriosa)?\s*:?\s*(\d{2,3})\s*/\s*\d{2,3}',
+          posizioneValore: const Value(0),
+        ),
+        // Pressione: diastolica (gruppo 1 del secondo pattern)
+        TemplateRefertiCompanion.insert(
+          nomeLaboratorio: 'Generico',
+          parametroId: pressione.id,
+          patternRicerca: r'(?:pressione|PA)\s*(?:arteriosa)?\s*:?\s*\d{2,3}\s*/\s*(\d{2,3})',
+          posizioneValore: const Value(1),
+        ),
+        // Glicemia/Glucosio
+        TemplateRefertiCompanion.insert(
+          nomeLaboratorio: 'Generico',
+          parametroId: glicemia.id,
+          patternRicerca: r'(?:glice\w+|glucos\w+)\s*:?\s*(\d{2,3}[,.]?\d*)\s*(?:mg/dl)?',
+          posizioneValore: const Value(0),
+        ),
+        // Peso
+        TemplateRefertiCompanion.insert(
+          nomeLaboratorio: 'Generico',
+          parametroId: peso.id,
+          patternRicerca: r'peso\s*(?:corporeo)?\s*:?\s*(\d{2,3}[,.]?\d*)\s*[Kk][Gg]',
+          posizioneValore: const Value(0),
+        ),
+      ]);
+    });
   });
 }
