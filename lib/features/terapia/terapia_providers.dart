@@ -34,7 +34,8 @@ final syncServiceProvider = Provider<SyncService>((ref) {
 final syncServiceAsyncProvider = FutureProvider<SyncService>((ref) async {
   final serverUrl = await AppConfig.instance.getServerUrl();
   if (serverUrl != null && serverUrl.isNotEmpty) {
-    return CloudSync(serverUrl);
+    final db = ref.read(appDatabaseProvider);
+    return CloudSync(db, serverUrl);
   }
   return const LocalOnlySync();
 });

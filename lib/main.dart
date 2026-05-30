@@ -8,6 +8,8 @@ import 'data/config/app_config.dart';
 import 'data/db/database.dart';
 import 'data/seed/seed_data.dart';
 import 'data/security/crypto_service.dart';
+import 'data/sync/cloud_sync.dart';
+import 'data/sync/sync_service.dart';
 import 'features/alert/notification_service.dart';
 import 'features/terapia/terapia_providers.dart';
 
@@ -29,6 +31,12 @@ Future<void> main() async {
   final notif = NotificationService.instance;
   await notif.init();
 
+  // Sync: LocalOnly di default; CloudSync se il server è configurato.
+  final serverUrl = await appConfig.getServerUrl();
+  final SyncService sync = (serverUrl != null && serverUrl.isNotEmpty)
+      ? CloudSync(db, serverUrl, pazienteId: pazienteId)
+      : const LocalOnlySync();
+
   // Sostituisce il loader con l'app vera.
   runApp(
     ProviderScope(
@@ -37,6 +45,7 @@ Future<void> main() async {
         notificationServiceProvider.overrideWithValue(notif),
         appConfigProvider.overrideWithValue(appConfig),
         pazienteCorrenteIdProvider.overrideWithValue(pazienteId),
+        syncServiceProvider.overrideWithValue(sync),
       ],
       child: DicaDocApp(showOnboarding: !isOnboarded),
     ),
