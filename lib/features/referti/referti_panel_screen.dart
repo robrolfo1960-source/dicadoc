@@ -51,6 +51,7 @@ class _RefertiPanelScreenState extends ConsumerState<RefertiPanelScreen> {
       appBar: AppBar(title: const Text('Referti')),
       floatingActionButton: _elaborando
           ? FloatingActionButton(
+              heroTag: 'referti_fab',
               onPressed: null,
               backgroundColor: AppTheme.brand,
               child: const SizedBox(
@@ -61,6 +62,7 @@ class _RefertiPanelScreenState extends ConsumerState<RefertiPanelScreen> {
               ),
             )
           : FloatingActionButton.extended(
+              heroTag: 'referti_fab',
               backgroundColor: AppTheme.brand,
               onPressed: () => ImageSourceSheet.mostra(
                 context,

@@ -27,6 +27,7 @@ class MedicoHomeScreen extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'medico_fab',
         onPressed: () async {
           final ok = await PazienteFormSheet.mostra(context);
           if (ok) ref.invalidate(listaPazientiProvider);

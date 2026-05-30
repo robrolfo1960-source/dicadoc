@@ -97,6 +97,7 @@ class _TerapiaPanelScreenState extends ConsumerState<TerapiaPanelScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Terapia')),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'terapia_fab',
         onPressed: _nuovaTerapia,
         tooltip: 'Nuova terapia',
         child: const Icon(Icons.add),
