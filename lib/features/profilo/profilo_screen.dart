@@ -8,6 +8,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../core/enums.dart';
 import '../../core/theme.dart';
 import '../../data/config/app_config.dart';
+import '../../data/sync/cloud_sync.dart';
 import '../anamnesi/anamnesi_providers.dart';
 import '../anamnesi/anamnesi_repository.dart';
 import '../anamnesi/anamnesi_screen.dart';
@@ -59,21 +60,70 @@ class _ProfiloScreenState extends ConsumerState<ProfiloScreen> {
       final data = jsonDecode(raw) as Map<String, dynamic>;
       final pid = data['pid'] as int?;
       if (pid == null) throw const FormatException('Campo "pid" mancante');
+      final serverUrl = data['server'] as String?;
       await AppConfig.instance.setPaziente(
         id: pid,
         nome: data['nome'] as String?,
-        serverUrl: data['server'] as String?,
+        serverUrl: serverUrl,
       );
+
+      // Aggiorna il provider a runtime.
+      ref.read(pazienteCorrenteIdProvider.notifier).set(pid);
+
+      // Pull immediato: se il paziente era già nel sistema, riceve i suoi dati.
+      if (serverUrl != null && serverUrl.isNotEmpty) {
+        try {
+          final db = ref.read(appDatabaseProvider);
+          await CloudSync(db, serverUrl, pazienteId: pid).pull();
+        } catch (_) {}
+      }
+
+      // Invalida tutte le schermate.
       ref.invalidate(profiloDataProvider);
+      ref.invalidate(farmaciOggiProvider);
+      ref.invalidate(parametriAbilitatiProvider);
+
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Paziente aggiornato')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registrazione completata — terapie sincronizzate')),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('QR non valido: $e')));
       }
+    }
+  }
+
+  Future<void> _disconnetti() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Disconnetti dispositivo'),
+        content: const Text(
+          'I tuoi dati rimangono sul server del medico.\n\n'
+          'Quando torni dal medico, scansiona di nuovo il suo QR per '
+          'ritrovare le tue terapie e ricominciare a registrare.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annulla'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Disconnetti'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await AppConfig.instance.reset();
+    ref.read(pazienteCorrenteIdProvider.notifier).set(1);
+    if (mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/onboarding', (_) => false);
     }
   }
 
@@ -225,10 +275,17 @@ class _ProfiloScreenState extends ConsumerState<ProfiloScreen> {
               },
             ),
             const SizedBox(height: 12),
-            OutlinedButton.icon(
+            FilledButton.icon(
               onPressed: () => setState(() => _scanQr = true),
               icon: const Icon(Icons.qr_code_scanner),
-              label: const Text('Scansiona nuovo QR del medico'),
+              label: const Text('Scansiona QR del medico'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.orange),
+              onPressed: _disconnetti,
+              icon: const Icon(Icons.logout),
+              label: const Text('Disconnetti — cambia medico o dispositivo'),
             ),
             const SizedBox(height: 24),
           ],

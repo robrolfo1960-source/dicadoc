@@ -6,6 +6,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/theme.dart';
 import '../../data/config/app_config.dart';
+import '../../data/sync/cloud_sync.dart';
+import '../monitora/monitora_providers.dart';
 import '../terapia/terapia_providers.dart';
 
 final _settingsInfoProvider = FutureProvider<_Info>((ref) async {
@@ -111,15 +113,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final data = jsonDecode(raw) as Map<String, dynamic>;
       final pid = data['pid'] as int?;
       if (pid == null) throw const FormatException('Campo "pid" mancante');
+      final serverUrl = data['server'] as String?;
       await AppConfig.instance.setPaziente(
         id: pid,
         nome: data['nome'] as String?,
-        serverUrl: data['server'] as String?,
+        serverUrl: serverUrl,
       );
+      ref.read(pazienteCorrenteIdProvider.notifier).set(pid);
+      if (serverUrl != null && serverUrl.isNotEmpty) {
+        try {
+          final db = ref.read(appDatabaseProvider);
+          await CloudSync(db, serverUrl, pazienteId: pid).pull();
+        } catch (_) {}
+      }
       ref.invalidate(_settingsInfoProvider);
+      ref.invalidate(farmaciOggiProvider);
+      ref.invalidate(parametriAbilitatiProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Paziente aggiornato')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registrazione completata — terapie sincronizzate')),
+        );
       }
     } catch (e) {
       if (mounted) {
