@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -187,11 +188,16 @@ class AppDatabase extends _$AppDatabase {
 LazyDatabase _openConnection(String passphrase) {
   return LazyDatabase(() async {
     final dir = await getApplicationDocumentsDirectory();
-    // Fase 3: nuovo file cifrato. Il vecchio 'dicadoc.sqlite' in chiaro
-    // (Fase 1/2) viene ignorato; il seed ricrea i dati demo al primo avvio.
     final file = File(p.join(dir.path, 'dicadoc_v3.sqlite'));
-    // createInBackground usa un isolate separato che può crashare
-    // in AOT (profile/release) su iOS 26 beta.
+
+    // Su iOS il database non usa SQLCipher: il sistema operativo protegge
+    // già i file con Data Protection (AES-256) e sandbox dell'app.
+    // SQLCipher in release/AOT su iOS 26 beta causa una schermata bianca.
+    if (Platform.isIOS) {
+      return NativeDatabase(file);
+    }
+
+    // Android e macOS: cifratura con SQLCipher (passphrase dal keystore).
     return NativeDatabase(
       file,
       setup: (db) => db.execute("PRAGMA key = '$passphrase'"),
