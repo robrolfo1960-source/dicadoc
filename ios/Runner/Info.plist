@@ -28,6 +28,12 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>La fotocamera è usata per scansionare il QR del medico e fotografare i referti di laboratorio.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>DicaDoc legge pressione, peso e glicemia da Apple Health per il monitoraggio clinico.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>DicaDoc può registrare misurazioni su Apple Health.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>DicaDoc si connette al server del medico sulla rete locale per sincronizzare terapie e misurazioni.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>La galleria è usata per selezionare foto di referti di laboratorio da importare.</string>
 	<key>UIApplicationSceneManifest</key>

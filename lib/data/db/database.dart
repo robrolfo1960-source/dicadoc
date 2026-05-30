@@ -190,7 +190,9 @@ LazyDatabase _openConnection(String passphrase) {
     // Fase 3: nuovo file cifrato. Il vecchio 'dicadoc.sqlite' in chiaro
     // (Fase 1/2) viene ignorato; il seed ricrea i dati demo al primo avvio.
     final file = File(p.join(dir.path, 'dicadoc_v3.sqlite'));
-    return NativeDatabase.createInBackground(
+    // createInBackground usa un isolate separato che può crashare
+    // in AOT (profile/release) su iOS 26 beta.
+    return NativeDatabase(
       file,
       setup: (db) => db.execute("PRAGMA key = '$passphrase'"),
     );
