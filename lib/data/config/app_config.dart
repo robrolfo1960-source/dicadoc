@@ -9,6 +9,7 @@ class AppConfig {
 
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    mOptions: MacOsOptions(useDataProtectionKeyChain: false),
   );
   static const _keyPazienteId = 'paziente_id';
   static const _keyPazienteNome = 'paziente_nome';

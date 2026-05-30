@@ -11,6 +11,7 @@ class CryptoService {
 
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    mOptions: MacOsOptions(useDataProtectionKeyChain: false),
   );
   static const _keyPassphrase = 'dicadoc_db_passphrase';
 
