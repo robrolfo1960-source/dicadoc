@@ -28,10 +28,10 @@ dependencies:
   flutter_secure_storage: ^9.2.4
 
   # F4 ONBOARDING QR - scanner QR per collegamento paziente/MMG
-  mobile_scanner: ^6.0.4
+  mobile_scanner: ^7.0.0
 
   # F5 OCR referti - ML Kit text recognition on-device (script latino)
-  google_mlkit_text_recognition: ^0.13.1
+  google_mlkit_text_recognition: ^0.15.0
   image_picker: ^1.1.2
 
   # F6 HEALTH CONNECT - patch locale: compileSdk 34→36 per connect-client 1.1.0-alpha11
