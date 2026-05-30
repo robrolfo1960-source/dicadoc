@@ -41,5 +41,8 @@ class AppConfig {
     }
   }
 
+  Future<void> setServerUrl(String url) =>
+      _storage.write(key: _keyServerUrl, value: url);
+
   Future<void> reset() async => _storage.deleteAll();
 }

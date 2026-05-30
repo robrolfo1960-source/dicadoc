@@ -40,6 +40,70 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _scansione = false;
+  bool _resetting = false;
+
+  Future<void> _riregistra() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Disassocia dispositivo'),
+        content: const Text(
+            'Verranno rimossi tutti i dati di configurazione.\n'
+            'Al riavvio potrai scansionare un nuovo QR del medico.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Annulla')),
+          FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Disassocia')),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    setState(() => _resetting = true);
+    await AppConfig.instance.reset();
+    ref.read(pazienteCorrenteIdProvider.notifier).set(1);
+    if (mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/onboarding', (_) => false);
+    }
+  }
+
+  Future<void> _modificaServerUrl(String attuale) async {
+    final ctrl = TextEditingController(text: attuale);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('URL server sync'),
+        content: TextField(
+          controller: ctrl,
+          decoration: const InputDecoration(
+            labelText: 'es. http://192.168.1.95:8090',
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.url,
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Annulla')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Salva')),
+        ],
+      ),
+    );
+    if (ok == true && ctrl.text.trim().isNotEmpty) {
+      await AppConfig.instance.setServerUrl(ctrl.text.trim());
+      ref.invalidate(_settingsInfoProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Server aggiornato — riavvia l\'app')));
+      }
+    }
+    ctrl.dispose();
+  }
 
   Future<void> _applicaQr(String raw) async {
     setState(() => _scansione = false);
@@ -112,6 +176,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onPressed: () => setState(() => _scansione = true),
               icon: const Icon(Icons.qr_code_scanner),
               label: const Text('Scansiona nuovo QR del medico'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => _modificaServerUrl(info.serverUrl ?? ''),
+              icon: const Icon(Icons.link),
+              label: const Text('Modifica URL server'),
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+              onPressed: _resetting ? null : _riregistra,
+              icon: const Icon(Icons.logout),
+              label: const Text('Disassocia — Ri-registra con nuovo QR'),
             ),
           ],
         ),

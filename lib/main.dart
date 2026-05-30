@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -32,8 +34,12 @@ Future<void> main() async {
   final notif = NotificationService.instance;
   await notif.init();
 
-  // Sync: LocalOnly di default; CloudSync se il server è configurato.
-  final serverUrl = await appConfig.getServerUrl();
+  // Sync: su macOS (medico) usa localhost di default; su mobile segue il QR.
+  var serverUrl = await appConfig.getServerUrl();
+  if (Platform.isMacOS && (serverUrl == null || serverUrl.isEmpty)) {
+    serverUrl = 'http://localhost:8090';
+    await appConfig.setServerUrl(serverUrl);
+  }
   final SyncService sync = (serverUrl != null && serverUrl.isNotEmpty)
       ? CloudSync(db, serverUrl, pazienteId: pazienteId)
       : const LocalOnlySync();
