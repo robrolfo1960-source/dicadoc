@@ -71,7 +71,10 @@ class _PazienteDetailScreenState extends ConsumerState<PazienteDetailScreen> {
   }
 
   Future<void> _aggiungiTerapia() async {
-    final salvata = await TerapiaFormSheet.mostra(context);
+    final salvata = await TerapiaFormSheet.mostra(
+      context,
+      pazienteId: _paziente.id,
+    );
     if (salvata) await _carica();
   }
 
@@ -85,6 +88,7 @@ class _PazienteDetailScreenState extends ConsumerState<PazienteDetailScreen> {
       context,
       terapia: t,
       orariEsistenti: orari,
+      pazienteId: _paziente.id,
     );
     if (salvata) await _carica();
   }
