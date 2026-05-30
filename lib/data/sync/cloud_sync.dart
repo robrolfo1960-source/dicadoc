@@ -18,13 +18,13 @@ import 'sync_service.dart';
 /// Il ruolo è determinato da [ruolo]: di default viene dedotto
 /// dal contesto (se ci sono terapie locali = medico, altrimenti paziente).
 class CloudSync implements SyncService {
-  CloudSync(this._db, this._serverUrl, {this.pazienteId = 1});
+  CloudSync(this._db, this.serverUrl, {this.pazienteId = 1});
 
   final AppDatabase _db;
-  final String _serverUrl;
+  final String serverUrl;
   final int pazienteId;
 
-  late final PocketBaseClient _pb = PocketBaseClient(_serverUrl);
+  late final PocketBaseClient _pb = PocketBaseClient(serverUrl);
 
   @override
   bool get isCloudEnabled => true;

@@ -40,6 +40,9 @@ dependencies:
   # F2 SYNC - HTTP client per PocketBase
   http: ^1.2.0
 
+  # Generazione QR per onboarding paziente (medico → paziente)
+  qr_flutter: ^4.1.0
+
   # Utility
   intl: ^0.20.2
 

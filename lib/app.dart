@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'core/theme.dart';
+import 'features/medico/medico_home_screen.dart';
 import 'features/monitora/monitora_panel_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/profilo/profilo_screen.dart';
@@ -12,14 +15,20 @@ class DicaDocApp extends StatelessWidget {
 
   final bool showOnboarding;
 
+  // macOS = modalità medico; iOS/Android = modalità paziente.
+  static bool get isMedico => Platform.isMacOS;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'DicaDoc',
+      title: isMedico ? 'DicaDoc Medico' : 'DicaDoc',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      initialRoute: showOnboarding ? '/onboarding' : '/home',
+      initialRoute: isMedico
+          ? '/medico'
+          : (showOnboarding ? '/onboarding' : '/home'),
       routes: {
+        '/medico': (_) => const MedicoHomeScreen(),
         '/onboarding': (_) => const OnboardingScreen(),
         '/home': (_) => const _HomeScreen(),
       },
