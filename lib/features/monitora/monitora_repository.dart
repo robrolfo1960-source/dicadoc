@@ -79,6 +79,36 @@ class MonitoraRepository {
     return risultato;
   }
 
+  Future<List<(ParametroCatalogo, bool)>> tuttiIParametriCatalogo(
+      int pazienteId) async {
+    final tutti = await (_db.select(_db.catalogoParametri)
+          ..where((p) => p.attivo.equals(true))
+          ..orderBy([(p) => OrderingTerm(expression: p.ordineVisualizzazione)]))
+        .get();
+    final abilitati = await (_db.select(_db.parametriAbilitati)
+          ..where((p) => p.pazienteId.equals(pazienteId)))
+        .get();
+    final abilitatiIds = abilitati.map((a) => a.parametroId).toSet();
+    return tutti.map((p) => (p, abilitatiIds.contains(p.id))).toList();
+  }
+
+  Future<void> abilitaParametro(int pazienteId, int parametroId) async {
+    await _db.into(_db.parametriAbilitati).insertOnConflictUpdate(
+          ParametriAbilitatiCompanion.insert(
+            pazienteId: pazienteId,
+            parametroId: parametroId,
+          ),
+        );
+  }
+
+  Future<void> disabilitaParametro(int pazienteId, int parametroId) async {
+    await (_db.delete(_db.parametriAbilitati)
+          ..where((p) =>
+              p.pazienteId.equals(pazienteId) &
+              p.parametroId.equals(parametroId)))
+        .go();
+  }
+
   Future<void> aggiungiMisurazione({
     required int pazienteId,
     required int parametroId,

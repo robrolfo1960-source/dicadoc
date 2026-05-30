@@ -48,7 +48,7 @@ class _RefertiPanelScreenState extends ConsumerState<RefertiPanelScreen> {
     final storicoAsync = ref.watch(storicoOcrProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('P3 - Referti')),
+      appBar: AppBar(title: const Text('Referti')),
       floatingActionButton: _elaborando
           ? FloatingActionButton(
               onPressed: null,

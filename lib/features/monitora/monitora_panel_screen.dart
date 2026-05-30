@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'monitora_providers.dart';
+import 'widgets/gestisci_parametri_sheet.dart';
 import 'widgets/misurazione_sheet.dart';
 import 'widgets/parametro_card.dart';
 
@@ -15,7 +16,19 @@ class MonitoraPanelScreen extends ConsumerWidget {
     final oggi = DateFormat('EEEE d MMMM', 'it_IT').format(DateTime.now());
 
     return Scaffold(
-      appBar: AppBar(title: const Text('P2 - Monitora')),
+      appBar: AppBar(
+        title: const Text('Monitora'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.tune_outlined),
+            tooltip: 'Gestisci parametri',
+            onPressed: () async {
+              final cambiato = await GestisciParametriSheet.mostra(context);
+              if (cambiato) ref.invalidate(parametriAbilitatiProvider);
+            },
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(parametriAbilitatiProvider),
         child: parametriAsync.when(
