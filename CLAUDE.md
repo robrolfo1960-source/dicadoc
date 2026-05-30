@@ -33,7 +33,7 @@ lib/
     ├── settings/           # Impostazioni: URL server, ri-registrazione
     ├── onboarding/         # Onboarding QR (prima accensione)
     ├── alert/              # NotificationService (F1)
-    └── health/             # HealthConnectService (F6, stub Android)
+    └── health/             # HealthConnectService (F6, stub Android/iOS — solo Android attivo)
 ```
 
 ---
@@ -47,8 +47,10 @@ flutter analyze lib/
 # macOS (medico) — sviluppo
 flutter build macos --debug && open build/macos/Build/Products/Debug/dicadoc.app
 
-# iOS (paziente) — installa su iPhone fisico (richiede ~5 min su iOS 26 beta)
-flutter run -d 00008110-001418D01ED9801E --release
+# iOS (paziente) — debug mode su iPhone fisico (VM Service può andare in timeout: normale)
+flutter run -d 00008110-001418D01ED9801E
+# NB: --release mostra schermata bianca su iOS 26 beta (bug rendering Flutter/iOS 26)
+# L'app è comunque sul telefono dopo "Installing and launching..." — aprila direttamente
 
 # Android
 flutter build apk --debug
@@ -70,13 +72,19 @@ flutter build apk --debug
 - Entitlements: `network.client` in Debug+Release per le chiamate HTTP a PocketBase
 
 ### iOS (Paziente)
-- **SQLCipher bypassato**: `Platform.isIOS → NativeDatabase(file)` senza PRAGMA key — causa schermata bianca in AOT release. iOS protegge già con Data Protection + sandbox.
+- **SQLCipher bypassato**: `Platform.isIOS → NativeDatabase(file)` senza PRAGMA key. Se esiste un vecchio DB cifrato (da versione precedente), `database.dart` controlla i primi 16 byte dell'header (`"SQLite format 3\0"`) e lo elimina prima di aprirlo — evita `SQLITE_NOTADB` → crash → schermata bianca.
 - **mobile_scanner**: fissato a `^5.2.3` (CocoaPods). v6.x rompe MLKit; v7.x usa SPM non supportato da Flutter su iOS 26 beta.
 - **google_mlkit**: fissato a `^0.13.1` / `^0.8.1` (MLKit 6.x compatibile con mobile_scanner v5)
 - iOS deployment target: **16.0** (minimo richiesto da mobile_scanner v5)
-- Installazione su iPhone fisico: usare `flutter run --release`, NON il tasto Run di Xcode né `xcrun devicectl` (firma Flutter.framework non compatibile)
-- Reinstall richiede sempre `flutter run --release` + USB + ~5 min (iOS 26 beta lento)
-- Autorizzazione developer: Impostazioni → Generali → VPN e gestione dispositivo → Trust
+- **SceneDelegate manuale**: `SceneDelegate.swift` NON estende `FlutterSceneDelegate` (buggy su iOS 26 beta — schermata bianca in AOT release). Crea `FlutterEngine` + `FlutterViewController` esplicitamente. Nota: `UIScene.ConnectionOptions` (non `UISceneConnectionOptions` — rinominata in iOS 26 → errore compiler).
+- **`UIScene.ConnectionOptions` in Xcode**: se ricompila dopo un aggiornamento Flutter, controllare che il compiler non abbia rigenerato `SceneDelegate.swift` con il vecchio nome.
+- **Entitlements ridotti**: `Runner.entitlements` contiene solo `com.apple.developer.healthkit: true`. Rimossi `healthkit.background-delivery` (richiede approvazione Apple) e `healthkit.access: health-records` (entitlement clinico ristretto) — entrambi causano crash al lancio se assenti nel profilo di provisioning del team.
+- **Health su iOS disabilitato**: `HealthConnectService.isDisponibile()` ritorna `false` su iOS senza chiamare HealthKit. Su iOS 26 beta, `HKHealthStore.requestAuthorization` lancia `NSInvalidArgumentException` ("NSHealthShareUsageDescription must be set") anche con la chiave presente nel bundle — bug iOS 26 beta. Il servizio Health è attivo solo su Android (Health Connect).
+- **Schermata bianca in release**: su iOS 26 beta con `flutter run --release` il rendering Flutter non parte. Il `SceneDelegate` manuale avvia il motore correttamente ma la pipeline di rendering non produce output. Per sviluppo usare **debug mode**. In distribuzione App Store/TestFlight il problema non si presenta.
+- **Crash handler**: `main.dart` usa `runZonedGuarded` — se l'init Dart lancia un'eccezione, viene mostrato uno schermo rosso con il messaggio invece del bianco silenzioso.
+- **Debug mode su iOS 26 beta**: il Dart VM Service spesso va in timeout ("not discovered after 60 seconds") — normale su iOS 26 beta. L'app è comunque installata e attiva sul dispositivo: aprirla direttamente dal telefono.
+- Installazione: `flutter run -d 00008110-001418D01ED9801E` (debug per sviluppo)
+- Autorizzazione developer: Impostazioni → Generali → VPN e gestione dispositivo → [nome team] → Autorizza
 - Modalità Sviluppatore: Impostazioni → Privacy e Sicurezza → Modalità Sviluppatore
 
 ### Android
@@ -142,5 +150,7 @@ pazienteCorrenteIdProvider   // NotifierProvider, aggiornabile dopo QR scan
 - **FAB**: ogni FloatingActionButton deve avere `heroTag` univoco (IndexedStack tiene tutti i tab vivi → crash Hero animation)
 - **macOS**: testare sempre con `flutter build macos --debug`, non solo `flutter analyze`
 - **iOS**: non usare `NativeDatabase.createInBackground()` — crasha in AOT su iOS 26
+- **iOS HealthKit**: non chiamare mai `Health().requestAuthorization()` su iOS — lancia `NSInvalidArgumentException` su iOS 26 beta anche con `NSHealthShareUsageDescription` presente. Tutto il codice health va guardato con `if (!Platform.isAndroid) return`.
+- **iOS SceneDelegate**: non modificare `SceneDelegate.swift` per usare `FlutterSceneDelegate` — causa schermata bianca in release su iOS 26 beta. Il pattern manuale (`FlutterEngine` + `FlutterViewController`) è deliberato.
 - **Notifiche macOS**: `InitializationSettings` deve includere `macOS: darwinInit` con tutti i permessi a `false`
 - **Providers immutabili**: non usare `overrideWithValue` su `NotifierProvider`

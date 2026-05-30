@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -185,6 +184,9 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
+// Header dei primi 16 byte di un file SQLite valido: "SQLite format 3\0"
+const _sqliteHeader = [83, 81, 76, 105, 116, 101, 32, 102, 111, 114, 109, 97, 116, 32, 51, 0];
+
 LazyDatabase _openConnection(String passphrase) {
   return LazyDatabase(() async {
     final dir = await getApplicationDocumentsDirectory();
@@ -194,6 +196,14 @@ LazyDatabase _openConnection(String passphrase) {
     // già i file con Data Protection (AES-256) e sandbox dell'app.
     // SQLCipher in release/AOT su iOS 26 beta causa una schermata bianca.
     if (Platform.isIOS) {
+      // Se esiste un vecchio DB cifrato con SQLCipher (da prima del bypass),
+      // l'header non corrisponde al magic SQLite → lo eliminiamo e il seed
+      // ricrea tutto. Questo evita "SQLITE_NOTADB" → crash → schermata bianca.
+      if (file.existsSync()) {
+        final header = file.readAsBytesSync().take(16).toList();
+        final isEncrypted = !_listEquals(header, _sqliteHeader);
+        if (isEncrypted) file.deleteSync();
+      }
       return NativeDatabase(file);
     }
 
@@ -203,4 +213,12 @@ LazyDatabase _openConnection(String passphrase) {
       setup: (db) => db.execute("PRAGMA key = '$passphrase'"),
     );
   });
+}
+
+bool _listEquals(List<int> a, List<int> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
 }

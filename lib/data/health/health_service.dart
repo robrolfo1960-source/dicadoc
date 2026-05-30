@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:health/health.dart';
 
@@ -21,6 +23,9 @@ class HealthConnectService {
   ];
 
   Future<bool> isDisponibile() async {
+    // Su iOS 26 beta HealthKit.requestAuthorization lancia NSInvalidArgumentException
+    // anche con NSHealthShareUsageDescription presente. Il servizio è stub su iOS.
+    if (!Platform.isAndroid) return false;
     return await Health().isHealthConnectAvailable();
   }
 

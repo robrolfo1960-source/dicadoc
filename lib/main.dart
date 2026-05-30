@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -22,6 +23,14 @@ Future<void> main() async {
   // nativa mentre SecureStorage / SQLCipher inizializzano il Keystore.
   runApp(const _LoadingApp());
 
+  // Cattura qualsiasi eccezione durante l'init e la mostra su schermo
+  // (in release mode i crash Dart sono silenziosi → schermata bianca).
+  await runZonedGuarded(_init, (error, stack) {
+    runApp(_ErrorApp(error: error.toString(), stack: stack.toString()));
+  });
+}
+
+Future<void> _init() async {
   // Inizializzazione asincrona pesante (Keystore, SQLCipher, seed).
   await initializeDateFormatting('it_IT', null);
   final passphrase = await CryptoService.instance.getPassphrase();
@@ -51,7 +60,6 @@ Future<void> main() async {
         appDatabaseProvider.overrideWithValue(db),
         notificationServiceProvider.overrideWithValue(notif),
         appConfigProvider.overrideWithValue(appConfig),
-        // Nessun override necessario: PazienteIdNotifier.build() legge _pazienteIdIniziale.
         syncServiceProvider.overrideWithValue(sync),
       ],
       child: DicaDocApp(showOnboarding: !isOnboarded),
@@ -77,6 +85,47 @@ class _LoadingApp extends StatelessWidget {
               SizedBox(height: 24),
               CircularProgressIndicator(color: Colors.white),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Schermata di diagnostica: sostituisce il bianco silenzioso con l'errore visibile.
+class _ErrorApp extends StatelessWidget {
+  const _ErrorApp({required this.error, required this.stack});
+  final String error;
+  final String stack;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: Colors.red.shade50,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'ERRORE AVVIO',
+                  style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(error,
+                    style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                const Divider(height: 24),
+                Text(stack,
+                    style:
+                        const TextStyle(fontSize: 10, color: Colors.black54)),
+              ],
+            ),
           ),
         ),
       ),
