@@ -67,10 +67,35 @@ class MedicoHomeScreen extends ConsumerWidget {
               onTap: () => Navigator.push(
                 ctx,
                 MaterialPageRoute(
-                  builder: (_) =>
-                      PazienteDetailScreen(paziente: pazienti[i]),
+                  builder: (_) => PazienteDetailScreen(paziente: pazienti[i]),
                 ),
               ).then((_) => ref.invalidate(listaPazientiProvider)),
+              onElimina: () async {
+                final ok = await showDialog<bool>(
+                  context: ctx,
+                  builder: (d) => AlertDialog(
+                    title: const Text('Elimina paziente'),
+                    content: Text(
+                        'Eliminare ${pazienti[i].nome} ${pazienti[i].cognome} e tutti i suoi dati?'),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.pop(d, false),
+                          child: const Text('Annulla')),
+                      FilledButton(
+                          style: FilledButton.styleFrom(
+                              backgroundColor: Colors.red),
+                          onPressed: () => Navigator.pop(d, true),
+                          child: const Text('Elimina')),
+                    ],
+                  ),
+                );
+                if (ok == true) {
+                  await ref
+                      .read(pazientiRepositoryProvider)
+                      .eliminaPaziente(pazienti[i].id);
+                  ref.invalidate(listaPazientiProvider);
+                }
+              },
             ),
           );
         },
@@ -80,10 +105,15 @@ class MedicoHomeScreen extends ConsumerWidget {
 }
 
 class _PazienteCard extends StatelessWidget {
-  const _PazienteCard({required this.paziente, required this.onTap});
+  const _PazienteCard({
+    required this.paziente,
+    required this.onTap,
+    this.onElimina,
+  });
 
   final Paziente paziente;
   final VoidCallback onTap;
+  final VoidCallback? onElimina;
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +139,22 @@ class _PazienteCard extends StatelessWidget {
           'CF: ${paziente.codiceFiscale}  ·  '
           'Nato/a il ${fmt.format(paziente.dataNascita)} (${paziente.anni} anni)',
         ),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: onElimina != null
+            ? PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (v) { if (v == 'elimina') onElimina!(); },
+                itemBuilder: (_) => [
+                  const PopupMenuItem(
+                    value: 'elimina',
+                    child: ListTile(
+                      leading: Icon(Icons.delete_outline, color: Colors.red),
+                      title: Text('Elimina', style: TextStyle(color: Colors.red)),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
+              )
+            : const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
     );

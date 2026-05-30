@@ -48,8 +48,21 @@ final terapiaRepositoryProvider = Provider<TerapiaRepository>((ref) {
   );
 });
 
-/// Paziente correntemente attivo. Override in main.dart con il valore da AppConfig.
-final pazienteCorrenteIdProvider = Provider<int>((ref) => 1);
+// Valore iniziale impostato da main() prima di runApp.
+int _pazienteIdIniziale = 1;
+
+/// Paziente correntemente attivo. Aggiornabile a runtime dopo onboarding QR.
+final pazienteCorrenteIdProvider =
+    NotifierProvider<PazienteIdNotifier, int>(PazienteIdNotifier.new);
+
+class PazienteIdNotifier extends Notifier<int> {
+  @override
+  int build() => _pazienteIdIniziale;
+  void set(int id) => state = id;
+}
+
+/// Chiamato da main() prima di runApp per settare il paziente dal keystore.
+void impostaPazienteIniziale(int id) => _pazienteIdIniziale = id;
 
 /// Le dosi di oggi raggruppate per farmaco (alimenta il pannello P1).
 final farmaciOggiProvider = FutureProvider<List<FarmacoOggi>>((ref) async {

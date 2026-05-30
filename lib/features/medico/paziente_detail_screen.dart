@@ -113,9 +113,7 @@ class _PazienteDetailScreenState extends ConsumerState<PazienteDetailScreen> {
     final fmtDt = DateFormat('d MMM HH:mm', 'it_IT');
     final p = _paziente;
 
-    return ProviderScope(
-      overrides: [pazienteCorrenteIdProvider.overrideWithValue(p.id)],
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: Text('${p.nome} ${p.cognome}'),
           actions: [
@@ -266,8 +264,7 @@ class _PazienteDetailScreenState extends ConsumerState<PazienteDetailScreen> {
                   ],
                 ),
               ),
-      ),
-    );
+        );
   }
 }
 

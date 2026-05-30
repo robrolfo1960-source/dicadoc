@@ -65,6 +65,27 @@ class PazientiRepository {
     );
   }
 
+  Future<void> eliminaPaziente(int id) async {
+    // Cancella in cascata: terapie, orari, misurazioni, assunzioni, patologie.
+    final terapie = await (_db.select(_db.terapie)
+          ..where((t) => t.pazienteId.equals(id)))
+        .get();
+    for (final t in terapie) {
+      await (_db.delete(_db.orariTerapia)
+            ..where((o) => o.terapiaId.equals(t.id)))
+          .go();
+      await (_db.delete(_db.assunzioni)
+            ..where((a) => a.terapiaId.equals(t.id)))
+          .go();
+    }
+    await (_db.delete(_db.terapie)..where((t) => t.pazienteId.equals(id))).go();
+    await (_db.delete(_db.misurazioni)..where((m) => m.pazienteId.equals(id))).go();
+    await (_db.delete(_db.patologie)..where((p) => p.pazienteId.equals(id))).go();
+    await (_db.delete(_db.risposteAnamnesi)..where((r) => r.pazienteId.equals(id))).go();
+    await (_db.delete(_db.parametriAbilitati)..where((p) => p.pazienteId.equals(id))).go();
+    await (_db.delete(_db.pazienti)..where((p) => p.id.equals(id))).go();
+  }
+
   Future<List<Terapia>> terapieAttive(int pazienteId) =>
       (_db.select(_db.terapie)
             ..where((t) =>

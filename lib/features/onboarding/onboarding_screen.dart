@@ -6,6 +6,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/theme.dart';
 import '../../data/config/app_config.dart';
+import '../../data/sync/cloud_sync.dart';
+import '../terapia/terapia_providers.dart';
 
 
 /// Schermata di primo avvio (F4 ONBOARDING QR).
@@ -44,7 +46,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         nome: data['nome'] as String?,
         serverUrl: data['server'] as String?,
       );
-      if (mounted) _navigaApp(pid);
+      if (mounted) await _navigaApp(pid);
     } catch (e) {
       setState(() {
         _errore = 'QR non valido: $e';
@@ -70,8 +72,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
-  void _navigaApp(int pazienteId) {
-    Navigator.of(context).pushReplacementNamed('/home');
+  Future<void> _navigaApp(int pid) async {
+    // Aggiorna il provider a runtime — tutti i widget si ricostruiscono.
+    ref.read(pazienteCorrenteIdProvider.notifier).set(pid);
+
+    // Pull immediato dal server se configurato.
+    final serverUrl = await AppConfig.instance.getServerUrl();
+    if (serverUrl != null && serverUrl.isNotEmpty) {
+      try {
+        final db = ref.read(appDatabaseProvider);
+        await CloudSync(db, serverUrl, pazienteId: pid).pull();
+      } catch (_) {}
+    }
+
+    ref.invalidate(farmaciOggiProvider);
+    if (mounted) Navigator.of(context).pushReplacementNamed('/home');
   }
 
   @override

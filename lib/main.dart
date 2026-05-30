@@ -26,6 +26,7 @@ Future<void> main() async {
   final appConfig = AppConfig.instance;
   final isOnboarded = await appConfig.isOnboarded();
   final pazienteId = await appConfig.getPazienteId() ?? 1;
+  impostaPazienteIniziale(pazienteId);
   final db = AppDatabase(passphrase);
   await seedIfEmpty(db);
   final notif = NotificationService.instance;
@@ -44,7 +45,7 @@ Future<void> main() async {
         appDatabaseProvider.overrideWithValue(db),
         notificationServiceProvider.overrideWithValue(notif),
         appConfigProvider.overrideWithValue(appConfig),
-        pazienteCorrenteIdProvider.overrideWithValue(pazienteId),
+        // Nessun override necessario: PazienteIdNotifier.build() legge _pazienteIdIniziale.
         syncServiceProvider.overrideWithValue(sync),
       ],
       child: DicaDocApp(showOnboarding: !isOnboarded),
